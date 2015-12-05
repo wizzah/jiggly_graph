@@ -1,0 +1,14 @@
+{
+	"nodes":[
+		{"name": "when I threw the carousel music box onto my bedroom floor and it shattered", "location": "37 plantation road debary florida", "emotion": "sad", "present": ["mother", "floral curtains", "dirty linoleum"], "absent": ["new toys", "father"], "group":0},
+		{"name": "when Peepers had her first litter of kittens", "location": "37 plantation road debary florida", "emotion": "joyful", "present": ["mother", "floral curtains", "dirty linoleum", "Billie Holiday record"], "absent": ["father"], "group":0},
+		{"name": "when Hurricane Charlie came and I had to miss 7th grade", "location": ["37 plantation road debary florida", "Deltona Middle School"], "emotion": ["confused", "disappointed"], "present": ["notes from friends", "a crush", "mother"], "absent": ["father", "stability"], "group":0},
+		{"name": "when I went to my rich uncle’s for Christmas", "location": "Eustis", "emotion": "jealous", "present": ["presents for Chelsea"], "absent": ["presents for me", "father"], "group":0}
+	],
+	"links":[
+		{"source":1,"target":0,"value":1},
+		{"source":2,"target":0,"value":8},
+		{"source":3,"target":0,"value":10},
+		{"source":4,"target":2,"value":6}
+	]
+}

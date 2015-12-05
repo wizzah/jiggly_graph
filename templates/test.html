@@ -1,0 +1,166 @@
+<html>
+  <head>
+    <style>
+
+.node {
+  opacity: 0.5;
+}
+
+.node:hover {
+  opacity: 1;
+}
+
+.link {
+  stroke: #999;
+  stroke-opacity: 0.3;
+}
+
+    </style>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+  </head>
+  <body>
+    <div id="viz"></div>
+{% set url = url_for('static',filename="miserables.json") %}
+
+    <script>
+
+function name(d) { return d.name; }
+function group(d) { return d.group; }
+
+var color = d3.scale.category10();
+function colorByGroup(d) { return color(group(d)); }
+
+var width = 960,
+    height = 500;
+
+var svg = d3.select('#viz')
+    .append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
+var node, link;
+
+var voronoi = d3.geom.voronoi()
+    .x(function(d) { return d.x; })
+    .y(function(d) { return d.y; })
+    .clipExtent([[-10, -10], [width+10, height+10]]);
+
+function recenterVoronoi(nodes) {
+    var shapes = [];
+    voronoi(nodes).forEach(function(d) {
+        if ( !d.length ) return;
+        var n = [];
+        d.forEach(function(c){
+            n.push([ c[0] - d.point.x, c[1] - d.point.y ]);
+        });
+        n.point = d.point;
+        shapes.push(n);
+    });
+    return shapes;
+}
+
+function compareNodes(node1, node2) {
+
+    //TODO: fix list comparisons, check all of list of node1 vs node2
+    //loop through node2 and check if it is in node1
+    for(var property in node1) {
+        //if first node is a list
+        if(typeof node1[property].constructor === Array) {
+
+            //if second node is also a list
+            if(typeof node2[property].constructor === Array) {
+
+                //do more comparison
+                for (var item in node1[property]) {
+                    if(node2[property].indexOf(item) >= 0) {
+                        console.log("match where node2 is list but node1 isn't");
+                    }
+                }
+            } else {
+                //node 2 not a list, node 1 is
+                console.log("node 2 not a list, node 1 is");
+                //do more comparison
+                if(node1[property].indexOf(node2[property]) >= 0) {
+                    console.log("match where node1 is list but node2 isn't");
+                }
+
+            }
+        } else {
+            //neither are lists
+            if(node1[property] == node2[property]) {
+                console.log("match, no lists");
+                console.log(node1[property], node2[property]);
+            }
+        }
+    }
+}
+
+var force = d3.layout.force()
+    .charge(-2000)
+    .friction(0.3)
+    .linkDistance(50)
+    .size([width, height]);
+
+force.on('tick', function() {
+    node.attr('transform', function(d) { return 'translate('+d.x+','+d.y+')'; })
+        .attr('clip-path', function(d) { return 'url(#clip-'+d.index+')'; });
+
+    link.attr('x1', function(d) { return d.source.x; })
+        .attr('y1', function(d) { return d.source.y; })
+        .attr('x2', function(d) { return d.target.x; })
+        .attr('y2', function(d) { return d.target.y; });
+
+    var clip = svg.selectAll('.clip')
+        .data( recenterVoronoi(node.data()), function(d) { return d.point.index; } );
+
+    clip.enter().append('clipPath')
+        .attr('id', function(d) { return 'clip-'+d.point.index; })
+        .attr('class', 'clip');
+    clip.exit().remove()
+
+    clip.selectAll('path').remove();
+    clip.append('path')
+        .attr('d', function(d) { return 'M'+d.join(',')+'Z'; });
+});
+
+
+d3.json("{{ url_for('static', filename='objects.json') }}", function(err, data) {
+
+    data.nodes.forEach(function(d, i) {
+        d.id = i;
+        if(data.nodes[i+1] <= data.nodes.length) {
+            compareNodes(d, data.nodes[i+1]);
+        }
+    });
+
+    link = svg.selectAll('.link')
+        .data( data.links )
+      .enter().append('line')
+        .attr('class', 'link')
+        .style("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+    node = svg.selectAll('.node')
+        .data( data.nodes )
+      .enter().append('g')
+        .attr('title', name)
+        .attr('class', 'node')
+        .call( force.drag );
+
+    node.append('circle')
+        .attr('r', 40)
+        .attr('fill', colorByGroup)
+        .attr('fill-opacity', 0.5);
+
+    node.append('circle')
+        .attr('r', 4)
+        .attr('stroke', 'black');
+
+    force
+        .nodes( data.nodes )
+        .links( data.links )
+        .start();
+});
+
+    </script>
+  </body>
+</html>
